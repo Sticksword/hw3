@@ -16,16 +16,18 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.image import grid_to_graph
 from sklearn.pipeline import Pipeline
 from sklearn.pipeline import make_pipeline
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
 # clustering
 from sklearn.cluster import KMeans
-from sklearn.mixture import GMM
+from sklearn.mixture import GaussianMixture
 
 # dimensionality reduction
 from sklearn.decomposition import PCA, FastICA
 from sklearn.random_projection import GaussianRandomProjection
 from sklearn.cluster import FeatureAgglomeration
+
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 # globals
 n_row, n_col = 2, 5
@@ -97,7 +99,7 @@ plot_gallery("Olivetti Faces Sample (normalized)", faces_X[:n_components])
 # digit clustering
 clustering_algs = {
     'K-Means': KMeans(n_clusters=n_components),
-    'Expectation Maximization': GMM(n_components=n_components)
+    'Expectation Maximization': GaussianMixture(n_components=n_components)
 }
 
 # dimensionality reduction algorithms
@@ -115,13 +117,38 @@ do_decompositions(digits_X, decompositions, image_shape=(8,8))
 plt.plot(decompositions['Principal Components Analysis'].explained_variance_)
 plt.xlabel('components')
 plt.ylabel('explained_variance_')
-plt.show()
+# plt.show()
 
 do_decompositions(faces_X, decompositions)
 plt.plot(decompositions['Principal Components Analysis'].explained_variance_)
 plt.xlabel('components')
 plt.ylabel('explained_variance_')
-plt.show()
+# plt.show()
+
+
+# do feature agglomerations
+agglo = FeatureAgglomeration(n_clusters=32, connectivity=grid_to_graph(*digits.images[0].shape))
+agglo.fit(digits_X)
+
+plt.suptitle('Agglomerated Feature Labels', size=16)
+
+plt.subplot(1,2,1)
+plt.imshow(np.reshape(agglo.labels_, digits.images[0].shape),
+           interpolation='nearest', cmap=plt.cm.spectral)
+plt.xticks(())
+plt.yticks(())
+
+# do feature agglomerations
+agglo = FeatureAgglomeration(n_clusters=32, connectivity=grid_to_graph(*faces.images[0].shape))
+agglo.fit(faces_X)
+
+plt.subplot(1,2,2)
+plt.imshow(np.reshape(agglo.labels_, faces.images[0].shape),
+           interpolation='nearest', cmap=plt.cm.spectral)
+plt.xticks(())
+plt.yticks(())
+
+plt.subplots_adjust(0.01, 0.05, 0.99, 0.93, 0.04, 0.)
 
 
 # split the data for supervised learning portion
@@ -143,13 +170,19 @@ wallclock = {}
 
 for title, process in preprocessors.items():
     if process == None:
-        nn_ = Classifier(layers=[
-                Layer("Maxout", units=100, pieces=2),
-                Layer("Softmax")],learning_rate=0.001,n_iter=25)
+        # nn_ = Classifier(layers=[
+        #         Layer("Maxout", units=100, pieces=2),
+        #         Layer("Softmax")],learning_rate=0.001,n_iter=25)
+        # print('starting nn clf')
+        nn_ = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,), random_state=1)
+        # start_time = time.time()
+        # nn_clf.fit(train_X, train_y)
+        # test_score = nn_clf.score(test_X, test_y)
+        # print_score('nn', test_score)
+        # algo_runtime = round(time.time() - start_time, 2)
+        # print(algo_runtime)
     else:
-        nn_ = make_pipeline(process, Classifier(layers=[
-                Layer("Maxout", units=100, pieces=2),
-                Layer("Softmax")],learning_rate=0.001,n_iter=25))
+        nn_ = make_pipeline(process, MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,), random_state=1))
 
     t0 = time()
     nn_.fit(X_train, y_train)
