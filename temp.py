@@ -39,7 +39,14 @@ def main():
         train_index, test_index = rs.split(X).__next__()
         train_X, train_y = X[train_index], y[train_index]
         test_X, test_y = X[test_index], y[test_index]
-
+    # data = np.loadtxt(r'Concrete_Data.csv', delimiter=',', skiprows=1)
+    # y_class = data[:, 8]
+    # lb = LabelEncoder()
+    #
+    # lb.fit(y_class)
+    #
+    # y = lb.transform(y_class)
+    # X = data[:, 0:8]
 
 
 
@@ -49,7 +56,7 @@ def print_score(name, score):
 
 
 
-from leven import levenshtein       
+from leven import levenshtein
 from sklearn.cluster import dbscan
 data = ["ACCTCCTAGAAG", "ACCTACTAGAAGTT", "GAATATTAGGCCGA"]
 def lev_metric(x, y):
